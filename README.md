@@ -79,6 +79,7 @@ sequenceDiagram
     S-->>C: AES-GCM(жауап), жаңа IV
 ```
 
+
 ### 2. Хабарға қол қою және тексеру
 ```mermaid
 flowchart LR
@@ -95,7 +96,51 @@ flowchart LR
     J -->|Иә| K[Хабарды қабылдау]
     J -->|Жоқ| L[Қабылдамау]
 ```
+### 3. Кластар диаграммасы (UML)
+```mermaid
+classDiagram
+    class Server {
+        -ServerSocket serverSocket
+        -KeyPair rsaKeyPair
+        +start()
+        +handleClient(Socket)
+        +registerPublicKey(user, key)
+    }
+    class Client {
+        -Socket socket
+        -SecretKey sessionKey
+        -KeyPair userKeyPair
+        +connect()
+        +sendMessage(text)
+        +receiveMessage()
+    }
+    class CryptoService {
+        +generateRsaKeyPair() KeyPair
+        +generateAesKey() SecretKey
+        +encryptAesKeyWithRsa(key, publicKey) byte[]
+        +decryptAesKeyWithRsa(data, privateKey) SecretKey
+        +encryptAesGcm(data, key) byte[]
+        +decryptAesGcm(data, key) byte[]
+    }
+    class SignatureService {
+        +sign(data, privateKey) byte[]
+        +verify(data, signature, publicKey) boolean
+    }
+    class Message {
+        -String sender
+        -String text
+        -byte[] signature
+        -long counter
+    }
 
+    Server --> CryptoService : uses
+    Client --> CryptoService : uses
+    Client --> SignatureService : uses
+    Server --> SignatureService : uses
+    Client ..> Message : creates
+    Server ..> Message : forwards
+    Client --> Server : socket
+```
 ## Қауіпсіздік ескертпесі
 - Жабық кілттер репозиторийге салынбайды (`.gitignore`).
 - Әр хабарға жаңа IV қолданылады.
